@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Randomly Camera</string>
+    <string name="title_activity_basic_camera">Basic Camera</string>
+    <string name="error_preview_surface_view_does_not_exist">SurfaceView for the preview does not exist.</string>
+    <string name="error_preview_not_started">Could not start the camera preview.</string>
+    <string name="error_surface_does_not_exist">Surface does not exist.</string>
+    <string name="accessibility_photo_view">photo taken</string>
+
+</resources>

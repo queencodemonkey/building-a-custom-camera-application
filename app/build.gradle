@@ -1,0 +1,56 @@
+apply plugin: 'android'
+
+android {
+    compileSdkVersion 19
+    buildToolsVersion "19.0.2"
+
+    defaultConfig {
+        minSdkVersion 10
+        targetSdkVersion 19
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            runProguard false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+    }
+
+    productFlavors {
+        basicSetup {
+            packageName "com.randomlytyping.camera.basic.setup"
+            versionName "1.0-basic-setup"
+            buildConfigField "int", "ORIENTATION",
+                    "android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED"
+        }
+        basicSetupLandscape {
+            packageName "com.randomlytyping.camera.basic.setup"
+            versionName "1.0-basic-setup"
+            buildConfigField "int", "ORIENTATION",
+                    "android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE"
+        }
+        basicPictureTaking {
+            packageName "com.randomlytyping.camera.basic.picturetaking"
+            versionName "1.0-basic-picture-taking"
+        }
+    }
+
+    sourceSets {
+        basicSetup {
+            manifest.srcFile 'src/basicSetup/AndroidManifest.xml'
+        }
+
+        basicSetupLandscape.setRoot('src/basicSetup');
+
+        basicPictureTaking {
+            manifest.srcFile 'src/basicPictureTaking/AndroidManifest.xml'
+        }
+    }
+}
+
+dependencies {
+    compile 'com.android.support:appcompat-v7:19.+'
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+}
