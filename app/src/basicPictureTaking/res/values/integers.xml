@@ -16,9 +16,7 @@
   -->
 <resources>
 
-    <!-- Base application theme. -->
-    <style name="Theme.RandomlyCamera" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
-    </style>
+    <!-- Length of time picture taken shows before going back to the camera preview (milliseconds)-->
+    <integer name="picture_taken_show_duration">2000</integer>
 
 </resources>

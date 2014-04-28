@@ -35,7 +35,7 @@ import java.io.IOException;
  */
 public class BasicSetupActivity extends Activity implements SurfaceHolder.Callback {
     // Views
-    private SurfaceView mPreviewSurfaceView;
+    private SurfaceView mPreviewSurface;
     private TextView mErrorTextView;
 
     // Camera fields
@@ -54,7 +54,7 @@ public class BasicSetupActivity extends Activity implements SurfaceHolder.Callba
         setContentView(R.layout.activity_basic_setup);
 
         // Grab references to the SurfaceView for the preview and the TextView for display errors.
-        mPreviewSurfaceView = (SurfaceView) findViewById(R.id.preview_surface);
+        mPreviewSurface = (SurfaceView) findViewById(R.id.preview_surface);
         mErrorTextView = (TextView) findViewById(R.id.error_text);
 
         setRequestedOrientation(BuildConfig.ORIENTATION);
@@ -66,8 +66,8 @@ public class BasicSetupActivity extends Activity implements SurfaceHolder.Callba
 
         // If there is a hardware camera then open it and start setting up the preview surface.
         if (hasCamera()) {
-            mCamera = openCamera();
-            mSurfaceHolder = mPreviewSurfaceView != null ? mPreviewSurfaceView.getHolder() : null;
+            openCamera();
+            mSurfaceHolder = mPreviewSurface != null ? mPreviewSurface.getHolder() : null;
             if ( mSurfaceHolder != null )
             {
                 /*  Add a callback to the SurfaceHolder so that we can start the preview after the
@@ -122,12 +122,11 @@ public class BasicSetupActivity extends Activity implements SurfaceHolder.Callba
 
     /**
      * Open the first back-facing camera and grab a {@link android.hardware.Camera} instance.
-     *
-     * @return A {@link android.hardware.Camera} instance for setting up the device camera and
-     * taking pictures.
      */
-    private Camera openCamera() {
-        return Camera.open();
+    private void openCamera() {
+        if ( mCamera != null ) {
+            mCamera = Camera.open();
+        }
     }
 
     /**
@@ -168,7 +167,7 @@ public class BasicSetupActivity extends Activity implements SurfaceHolder.Callba
     {
         mErrorTextView.setText(errorResourceId);
         mErrorTextView.setVisibility(View.VISIBLE);
-        mPreviewSurfaceView.setVisibility(View.GONE);
+        mPreviewSurface.setVisibility(View.GONE);
     }
 
     /**
@@ -177,7 +176,7 @@ public class BasicSetupActivity extends Activity implements SurfaceHolder.Callba
     private void hideError()
     {
         mErrorTextView.setVisibility(View.GONE);
-        mPreviewSurfaceView.setVisibility(View.VISIBLE);
+        mPreviewSurface.setVisibility(View.VISIBLE);
     }
 
 

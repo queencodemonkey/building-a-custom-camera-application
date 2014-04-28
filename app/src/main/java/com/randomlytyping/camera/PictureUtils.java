@@ -20,9 +20,24 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 /**
+ * The PictureUtils class contains several static utility methods for working with the hardware
+ * {@link android.hardware.Camera} and its data.
+ * <p/>
  * Created by Huyen Tue Dao on 4/27/14.
  */
-public class PhotoUtils {
+public class PictureUtils {
+    /**
+     * Creates a {@link android.graphics.Bitmap} from raw image byte data. This will usually come
+     * from a {@link android.hardware.Camera.PictureCallback} returning byte data from the {@link
+     * android.hardware.Camera}.
+     *
+     * @param data   Image data as a byte array.
+     * @param width  Requested width for the created {@link android.graphics.Bitmap}.
+     * @param height Requested height for the created {@link android.graphics.Bitmap}.
+     *
+     * @return A {@link android.graphics.Bitmap} containing the given image data best fit to a given
+     * width and height.
+     */
     public static Bitmap bitmapFromRawBytes(byte[] data, int width, int height) {
         /*  Decode the dimensions of the bitmap data so we can determine a sample size that fits the
         requested width and height. */
@@ -34,12 +49,12 @@ public class PhotoUtils {
 
         // Calculate the sample size as power of 2 that will satisfy the requested width and height.
         int inSampleSize = 1;
-        if ( actualWidth > width || actualHeight > height) {
+        if (actualWidth > width || actualHeight > height) {
             int shift = 0;
             while ((actualWidth >> shift + 1) > width && (actualHeight >> shift + 1) > height) {
                 shift++;
             }
-            if ( shift > 0 ) {
+            if (shift > 0) {
                 inSampleSize <<= shift;
             }
         }
@@ -49,5 +64,16 @@ public class PhotoUtils {
         options.inSampleSize = inSampleSize;
         options.inJustDecodeBounds = false;
         return BitmapFactory.decodeByteArray(data, 0, data.length, options);
+    }
+
+
+    //
+    // Constructor
+    //
+
+    /**
+     * Private constructor for type safety.
+     */
+    private PictureUtils() {
     }
 }

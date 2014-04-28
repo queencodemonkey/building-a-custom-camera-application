@@ -19,42 +19,55 @@ package com.randomlytyping.camera;
 import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.io.IOException;
 
 /**
- * The BasicPictureTakingActivity class is just a simple example of how to start using a device camera
- * with {@link android.hardware.Camera} instance and start a camera preview with a
- * {@link android.view.SurfaceView} and a {@link android.view.SurfaceHolder}.
+ * The BasicPictureTakingActivity class is just a simple example of how to start using a device
+ * camera with {@link android.hardware.Camera} instance and start a camera preview with a {@link
+ * android.view.SurfaceView} and a {@link android.view.SurfaceHolder}.
  */
-public class BasicPictureTakingActivity extends Activity implements SurfaceHolder.Callback {
+public class BasicPictureTakingActivity extends Activity implements SurfaceHolder.Callback,
+        View.OnClickListener {
     // Views
     private TextView mErrorTextView;
-    private SurfaceView mPreviewSurfaceView;
-    private ImageView mTakenPhotoView;
+    private SurfaceView mPreviewSurface;
+    private ImageView mPictureView;
+    private ImageButton mCaptureButton;
 
     // Camera fields
     private SurfaceHolder mSurfaceHolder;
     private Camera mCamera;
 
+    // Threading/runnables
+    private long mHidePictureDelay;
+    private Handler mHandler;
+    private Runnable mHidePictureRunnable = new Runnable() {
+        @Override
+        public void run() {
+            hidePictureTaken();
+        }
+    };
+
     // Picture callbacks
-    private final Camera.PictureCallback rawCallback = new Camera.PictureCallback() {
+    private final Camera.PictureCallback mRawCallback = new Camera.PictureCallback() {
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
-
-            mTakenPhotoView.setImageBitmap(PhotoUtils.bitmapFromRawBytes(
+            showPicture(PictureUtils.bitmapFromRawBytes(
                     data,
-                    mTakenPhotoView.getWidth(),
-                    mTakenPhotoView.getHeight()
+                    mPictureView.getWidth(),
+                    mPictureView.getHeight()
             ));
         }
     };
@@ -69,9 +82,16 @@ public class BasicPictureTakingActivity extends Activity implements SurfaceHolde
 
         setContentView(R.layout.activity_basic_picture_taking);
 
-        // Grab references to the SurfaceView for the preview and the TextView for display errors.
-        mPreviewSurfaceView = (SurfaceView) findViewById(R.id.preview_surface);
+        // Grab references to views and set them up.
+        mPreviewSurface = (SurfaceView) findViewById(R.id.preview_surface);
         mErrorTextView = (TextView) findViewById(R.id.error_text);
+        mPictureView = (ImageView) findViewById(R.id.picture_taken);
+        mCaptureButton = (ImageButton) findViewById(R.id.capture_button);
+        mCaptureButton.setOnClickListener(this);
+
+        // Initialize fields for executing code on the UI thread.
+        mHidePictureDelay = getResources().getInteger(R.integer.picture_taken_show_duration);
+        mHandler = new Handler(Looper.getMainLooper());
     }
 
     @Override
@@ -80,25 +100,22 @@ public class BasicPictureTakingActivity extends Activity implements SurfaceHolde
 
         // If there is a hardware camera then open it and start setting up the preview surface.
         if (hasCamera()) {
-            mCamera = openCamera();
-            mSurfaceHolder = mPreviewSurfaceView != null ? mPreviewSurfaceView.getHolder() : null;
-            if ( mSurfaceHolder != null )
-            {
+           openCamera();
+            mSurfaceHolder = mPreviewSurface != null ? mPreviewSurface.getHolder() : null;
+            if (mSurfaceHolder != null) {
                 /*  Add a callback to the SurfaceHolder so that we can start the preview after the
                 surface is created. */
-                mSurfaceHolder.addCallback( this );
+                mSurfaceHolder.addCallback(this);
 
                 /*  In order to support Gingerbread and below, need to call SurfaceHolder#setType.
                 If Gingerbread support is not needed, then do not call #setType as it is deprecated
                 and higher API levels take care of this setting automatically. */
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB ) {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
                     mSurfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
                 }
 
                 hideError();
-            }
-            else
-            {
+            } else {
                 showError(R.string.error_preview_surface_view_does_not_exist);
             }
         }
@@ -109,13 +126,16 @@ public class BasicPictureTakingActivity extends Activity implements SurfaceHolde
         super.onPause();
 
         // Tear down the surface holder.
-        if (mSurfaceHolder != null)
-        {
+        if (mSurfaceHolder != null) {
             mSurfaceHolder.removeCallback(this);
         }
 
         // Close the camera while we are not using so that other applications can use it.
         closeCamera();
+
+        // Hide any shown picture so that when we come back the camera and preview are shown.
+        mHandler.removeCallbacks(mHidePictureRunnable);
+        hidePictureTaken();
     }
 
 
@@ -136,12 +156,11 @@ public class BasicPictureTakingActivity extends Activity implements SurfaceHolde
 
     /**
      * Open the first back-facing camera and grab a {@link android.hardware.Camera} instance.
-     *
-     * @return A {@link android.hardware.Camera} instance for setting up the device camera and
-     * taking pictures.
      */
-    private Camera openCamera() {
-        return Camera.open();
+    private void openCamera() {
+        if ( mCamera == null ) {
+            mCamera = Camera.open();
+        }
     }
 
     /**
@@ -156,17 +175,44 @@ public class BasicPictureTakingActivity extends Activity implements SurfaceHolde
     }
 
     /**
-     * Starts the camera preview using our already-created surface.
+     * Starts the camera preview using our already-created surface or shows an error message if
+     * there was a problem starting the preview.
      */
     private void startPreview() {
         try {
-
             mCamera.setPreviewDisplay(mSurfaceHolder);
             mCamera.startPreview();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             showError(R.string.error_preview_not_started);
         }
+    }
+
+
+    //
+    // Show/hide picture taken
+    //
+
+    /**
+     * Displays a picture taken with the {@link android.hardware.Camera} and hides the preview and
+     * capture button.
+     *
+     * @param bitmap A {@link android.graphics.Bitmap} containing the picture taken.
+     */
+    private void showPicture(Bitmap bitmap) {
+        mPictureView.setImageBitmap(bitmap);
+        mPictureView.setVisibility(View.VISIBLE);
+        mPreviewSurface.setVisibility(View.INVISIBLE);
+        mCaptureButton.setVisibility(View.GONE);
+        mHandler.postDelayed(mHidePictureRunnable, mHidePictureDelay);
+    }
+
+    /**
+     * Hides any shown picture and shows the preview and capture button.
+     */
+    private void hidePictureTaken() {
+        mPictureView.setVisibility(View.INVISIBLE);
+        mPreviewSurface.setVisibility(View.VISIBLE);
+        mCaptureButton.setVisibility(View.VISIBLE);
     }
 
 
@@ -179,20 +225,18 @@ public class BasicPictureTakingActivity extends Activity implements SurfaceHolde
      *
      * @param errorResourceId A resource ID for the error string resource.
      */
-    private void showError(int errorResourceId)
-    {
+    private void showError(int errorResourceId) {
         mErrorTextView.setText(errorResourceId);
         mErrorTextView.setVisibility(View.VISIBLE);
-        mPreviewSurfaceView.setVisibility(View.GONE);
+        mPreviewSurface.setVisibility(View.GONE);
     }
 
     /**
      * Hides the error message text and show the camera preview.
      */
-    private void hideError()
-    {
+    private void hideError() {
         mErrorTextView.setVisibility(View.GONE);
-        mPreviewSurfaceView.setVisibility(View.VISIBLE);
+        mPreviewSurface.setVisibility(View.VISIBLE);
     }
 
 
@@ -202,14 +246,17 @@ public class BasicPictureTakingActivity extends Activity implements SurfaceHolde
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
+        /*  Re-open the camera in the case that the surface is being re-created meaning that the
+        camera was closed when it was previously destroyed. */
+        openCamera();
+
         // The surface was created so try to start the camera preview displaying on the surface.
         startPreview();
     }
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        if (holder.getSurface() == null)
-        {
+        if (holder.getSurface() == null) {
             showError(R.string.error_surface_does_not_exist);
         }
     }
@@ -218,5 +265,18 @@ public class BasicPictureTakingActivity extends Activity implements SurfaceHolde
     public void surfaceDestroyed(SurfaceHolder holder) {
         // If the surface is destroyed, close the camera.
         closeCamera();
+    }
+
+
+    //
+    // View.OnClickListener implementation
+    //
+
+    @Override
+    public void onClick(View v) {
+        if (mCamera != null) {
+            // Take picture and capture raw image data.
+            mCamera.takePicture(null, null, mRawCallback);
+        }
     }
 }

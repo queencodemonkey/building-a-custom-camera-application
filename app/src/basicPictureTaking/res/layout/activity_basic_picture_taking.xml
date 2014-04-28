@@ -28,11 +28,21 @@
 
     <!-- Display for taken photos -->
     <ImageView
+        android:id="@+id/picture_taken"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="centerInside"
-        android:contentDescription="@string/accessibility_photo_view"
-        android:visibility="gone" />
+        android:contentDescription="@string/accessibility_picture_view"
+        android:visibility="invisible" />
+
+    <!-- Picture capture button -->
+    <ImageButton
+        android:id="@+id/capture_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|bottom"
+        android:src="@drawable/ic_camera"
+        android:contentDescription="@string/accessibility_take_picture_button" />
 
     <!-- Error message if camera cannot open. -->
     <TextView

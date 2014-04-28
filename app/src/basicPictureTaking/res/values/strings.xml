@@ -14,11 +14,10 @@
   See the License for the specific language governing permissions and
   limitations under the License.
   -->
+
 <resources>
 
-    <!-- Base application theme. -->
-    <style name="Theme.RandomlyCamera" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
-    </style>
+    <string name="accessibility_picture_view">picture taken</string>
+    <string name="accessibility_take_picture_button">take picture</string>
 
 </resources>
