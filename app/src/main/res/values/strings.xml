@@ -13,13 +13,31 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
-  -->
+-->
 <resources>
 
     <string name="app_name">Randomly Camera</string>
-    <string name="title_activity_basic_camera">Basic Camera</string>
+    <string name="error_no_camera">This device does not have a camera.</string>
     <string name="error_preview_surface_view_does_not_exist">SurfaceView for the preview does not exist.</string>
     <string name="error_preview_not_started">Could not start the camera preview.</string>
-    <string name="error_surface_does_not_exist">Surface does not exist.</string>
+
+    <!-- Picture Taking -->
+    <string name="accessibility_picture_view">picture taken</string>
+    <string name="accessibility_take_picture_button">take picture</string>
+    <string name="accessibility_switch_to_front_camera">switch to front camera</string>
+    <string name="accessibility_switch_to_back_camera">switch to back camera</string>
+    <string name="accessibility_exposure_compensation">change exposure compensation</string>
+    <string name="accessibility_color_effect">change color effect</string>
+    <string name="accessibility_flash_on">flash on</string>
+    <string name="accessibility_flash_off">flash off</string>
+    <string name="accessibility_flash_auto">flash to auto mode</string>
+    <string name="accessibility_zoom">zoom</string>
+    <string name="accessibility_white_balance">change white balance</string>
+    <string name="accessibility_face_detection_on">turn on face detection</string>
+    <string name="accessibility_face_detection_off">turn off face detection</string>
+    <string name="accessibility_scene">change scene mode</string>
+    <string name="title_activity_basic_picture_taking">BasicPictureTaking</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
 
 </resources>

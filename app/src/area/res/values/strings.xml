@@ -16,7 +16,6 @@
   -->
 <resources>
 
-    <!-- Length of time picture taken shows before going back to the camera preview (milliseconds)-->
-    <integer name="picture_taken_show_duration">2000</integer>
+    <string name="title_activity_camera_area">Metering and Focus Areas</string>
 
 </resources>

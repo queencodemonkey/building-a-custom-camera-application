@@ -15,16 +15,41 @@
   limitations under the License.
   -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
-             android:layout_height="match_parent"
-             tools:context=".BasicPictureTakingActivity">
+             android:layout_height="match_parent">
 
-    <!-- Preview surface -->
-    <SurfaceView
-        android:id="@+id/preview_surface"
+    <!-- Camera viewfinder: preview and interface -->
+    <com.randomlytyping.camera.Preview
+        android:id="@+id/preview"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+    <!-- Picture capture button -->
+    <ImageButton
+        android:id="@+id/capture_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|bottom"
+        android:src="@drawable/ic_camera"
+        android:contentDescription="@string/accessibility_take_picture_button" />
+
+    <!-- Toggle face detection button -->
+    <ImageButton
+        android:id="@+id/face_detection_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left|bottom"
+        android:src="@drawable/ic_face_detection"
+        android:contentDescription="@string/accessibility_face_detection_on" />
+
+    <!-- Switch front/back camera button -->
+    <ImageButton
+        android:id="@+id/switch_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right|bottom"
+        android:src="@drawable/ic_camera_switch"
+        android:contentDescription="@string/accessibility_switch_to_front_camera" />
 
     <!-- Display for taken photos -->
     <ImageView
@@ -35,14 +60,6 @@
         android:contentDescription="@string/accessibility_picture_view"
         android:visibility="invisible" />
 
-    <!-- Picture capture button -->
-    <ImageButton
-        android:id="@+id/capture_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal|bottom"
-        android:src="@drawable/ic_camera"
-        android:contentDescription="@string/accessibility_take_picture_button" />
 
     <!-- Error message if camera cannot open. -->
     <TextView

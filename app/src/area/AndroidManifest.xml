@@ -20,9 +20,9 @@
     <!-- Application declaration -->
     <application>
         <activity
-            android:name=".BasicSetupActivity"
-            android:label="@string/title_activity_basic_setup"
-            android:screenOrientation="landscape">
+            android:name=".CameraAreaActivity"
+            android:label="@string/title_activity_camera_area"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

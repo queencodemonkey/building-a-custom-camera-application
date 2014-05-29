@@ -15,20 +15,21 @@
   limitations under the License.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.randomlytyping.camera">
+    package="com.randomlytyping.camera" >
 
     <!-- Camera-specific permission -->
     <uses-permission android:name="android.permission.CAMERA" />
 
     <!-- Specifying feature requirements for Google Play filtering. -->
-    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
 
     <!-- Application declaration -->
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/Theme.RandomlyCamera">
-    </application>
+        android:theme="@style/Theme.RandomlyCamera" />
 
 </manifest>

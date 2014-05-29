@@ -1,4 +1,4 @@
-/*
+package com.randomlytyping.camera;/*
  * Copyright 2014 Randomly Typing LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,47 +14,50 @@
  * limitations under the License.
  */
 
-package com.randomlytyping.camera;
-
+import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.hardware.Camera;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.io.IOException;
+import com.randomlytyping.camera.PreviewSurface;
 
 /**
- * The BasicPictureTakingActivity class demonstrates simple picture taking with the {@link
- * android.hardware.Camera}. Along with actually taking the picture, the BasicPictureTakingActivity
- * may display the taken picture to the user for a brief period of time.
- * <p/>
- * Created by Huyen Tue Dao on 04/28/14.
+ * Created by Huyen Tue Dao on 5/11/14.
  */
-public class BasicPictureTakingActivity extends Activity implements SurfaceHolder.Callback,
-        View.OnClickListener {
+public class AutoFocusActivity extends Activity implements View.OnClickListener,
+        View.OnTouchListener {
+    /**
+     * ID value for a particular camera (front or back) that was not found.
+     */
+    private static final int NO_CAMERA = -1;
+
+    /**
+     * Whether the currently open camera is the front-facing camera.
+     */
+    private static final String STATE_IS_FRONT_CAMERA = "isFrontCamera";
 
     // Views
-    private SurfaceView mPreviewSurface;
+    private PreviewSurface mPreview;
     private TextView mErrorTextView;
 
     private ImageView mPictureView;
     private ImageButton mCaptureButton;
 
-    // Camera fields
-    private SurfaceHolder mSurfaceHolder;
-    private Camera mCamera;
+    private ImageButton mSwitchButton;
 
-    // Flags
-    private boolean canStartPreview;
+    // Camera fields
+    private Camera mCamera;
+    private boolean mIsFrontCamera;
+    private int mBackCameraId;
+    private int mFrontCameraId;
 
     // Threading/runnables
     private long mHidePictureDelay;
@@ -75,15 +78,18 @@ public class BasicPictureTakingActivity extends Activity implements SurfaceHolde
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_basic_picture_taking);
+        setContentView(R.layout.activity_auto_focus);
 
         // Grab references to the SurfaceView for the preview and the TextView for display errors.
-        mPreviewSurface = (SurfaceView) findViewById(R.id.preview_surface);
+        mPreview = (CameraPreview) findViewById(R.id.preview);
         mErrorTextView = (TextView) findViewById(R.id.error_text);
 
         // Grab references to the picture-taking-related views.
         mPictureView = (ImageView) findViewById(R.id.picture_taken);
         mCaptureButton = (ImageButton) findViewById(R.id.capture_button);
+
+        // Grab references to camera-switching-related views.
+        mSwitchButton = (ImageButton) findViewById(R.id.switch_button);
 
         /*
             If the device actually has a camera, set up the surface holder.
@@ -94,27 +100,25 @@ public class BasicPictureTakingActivity extends Activity implements SurfaceHolde
                 If the activity contains a valid SurfaceView for the preview, then set it up.
                 Otherwise, display an error message.
              */
-            if (mPreviewSurface != null) {
-                /*  Need to grab a reference to the SurfaceHolder so that we can respond to changes
-                in the surface. */
-                mSurfaceHolder = mPreviewSurface.getHolder();
-
-                /*  Add a callback to the SurfaceHolder so that we can start the preview after the
-                surface is created. */
-                mSurfaceHolder.addCallback(this);
-
-                /*  In order to support Gingerbread and below, need to call SurfaceHolder#setType.
-                If Gingerbread support is not needed, then do not call #setType as it is deprecated
-                and higher API levels take care of this setting automatically. */
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-                    mSurfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-                }
-
+            if (mPreview != null) {
                 /*  Initialize fields for executing code on the UI thread. We are using this for
                 hiding the preview of a taken picture after a short delay. */
                 mHidePictureDelay = getResources().getInteger(R.integer.picture_taken_show_duration);
                 mHandler = new Handler(Looper.getMainLooper());
-                mCaptureButton.setOnClickListener(this);
+
+                // Get back-facing camera info.
+                mBackCameraId = findCameraId(false);
+
+                // If the device has a front-facing camera, determine what camera we open first.
+                if (hasFrontCamera()) {
+                    mFrontCameraId = findCameraId(true);
+                    mIsFrontCamera = savedInstanceState != null
+                            && savedInstanceState.getBoolean(STATE_IS_FRONT_CAMERA, false);
+                    mSwitchButton.setOnClickListener(this);
+                } else {
+                    mFrontCameraId = NO_CAMERA;
+                    mSwitchButton.setVisibility(View.GONE);
+                }
 
                 hideError();
             } else {
@@ -134,12 +138,9 @@ public class BasicPictureTakingActivity extends Activity implements SurfaceHolde
         super.onResume();
 
         // If there is a hardware camera then open it and start setting up the preview surface.
-        if (mPreviewSurface != null && hasCamera()) {
+        if (mPreview != null && hasCamera()) {
             openCamera();
-            // If the surface has already been created, then start the preview.
-            if (canStartPreview) {
-                startPreview();
-            }
+            mCaptureButton.setOnTouchListener(this);
         }
     }
 
@@ -149,6 +150,14 @@ public class BasicPictureTakingActivity extends Activity implements SurfaceHolde
 
         // Close the camera while we are not using so that other applications can use it.
         closeCamera();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        // Save which camera is currently open to state.
+        outState.putBoolean(STATE_IS_FRONT_CAMERA, mIsFrontCamera);
     }
 
 
@@ -168,12 +177,68 @@ public class BasicPictureTakingActivity extends Activity implements SurfaceHolde
     }
 
     /**
+     * Check whether the device has a front-facing camera.
+     *
+     * @return True if the device has a front-facing camera; false otherwise.
+     */
+    private boolean hasFrontCamera() {
+        final PackageManager packageManager = getPackageManager();
+        return packageManager != null
+                && packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_FRONT);
+    }
+
+    /**
+     * Returns the camera ID (an integer between 0 and {@link android.hardware.Camera#getNumberOfCameras()})
+     * for either the first front-facing or first back-facing camera.
+     *
+     * @param front True to find the first front-facing camera; false to find the first back-facing
+     *              camera.
+     *
+     * @return The camera ID for the requested camera as an integer between between 0 and {@link
+     * android.hardware.Camera#getNumberOfCameras()} or -1 if there was no matching camera.
+     */
+    private int findCameraId(boolean front) {
+        final Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+        final int cameraCount = Camera.getNumberOfCameras();
+        /*  Iterate through 0…getNumberOfCameras - 1 to find the camera ID of the first front or
+        the first back camera. */
+        for (int i = 0; i < cameraCount; i++) {
+            Camera.getCameraInfo(i, cameraInfo);
+            if ((front && cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT)
+                    || (!front && cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK)) {
+                return i;
+            }
+        }
+        return NO_CAMERA;
+    }
+
+    /**
+     * Returns a {@link android.hardware.Camera.CameraInfo} instance containing
+     * information on the currently open camera.
+     *
+     * @return A {@link android.hardware.Camera.CameraInfo} instance containing
+     * information on the currently open camera or `null` if no camera is open.
+     */
+    private Camera.CameraInfo getCameraInfo()
+    {
+        final Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+        Camera.getCameraInfo(mIsFrontCamera ? mFrontCameraId : mBackCameraId, cameraInfo);
+        return cameraInfo;
+    }
+
+    /**
      * Open the first back-facing camera and grab a {@link android.hardware.Camera} instance.
      */
     private void openCamera() {
-        if (mCamera == null) {
-            mCamera = Camera.open();
+        if (mCamera != null) {
+            mCamera.cancelAutoFocus();
+            mCamera.release();
         }
+        mCamera = Camera.open(mIsFrontCamera ? mFrontCameraId : mBackCameraId);
+        final Camera.CameraInfo cameraInfo = getCameraInfo();
+        mCamera.setDisplayOrientation(cameraInfo.orientation);
+        mPreview.setCamera(mCamera, cameraInfo);
+        mPreview.start();
     }
 
     /**
@@ -184,22 +249,32 @@ public class BasicPictureTakingActivity extends Activity implements SurfaceHolde
         if (mCamera != null) {
             mCamera.release();
             mCamera = null;
+            mPreview.reset();
         }
     }
 
     /**
-     * Starts the camera preview using our already-created surface.
+     * Toggles the camera if we have two cameras available and starts the preview for the new
+     * camera.
      */
-    private void startPreview() {
-        if (mCamera != null) {
-            try {
-                mCamera.setPreviewDisplay(mSurfaceHolder);
-                mCamera.startPreview();
-            } catch (IOException e) {
-                showError(R.string.error_preview_not_started);
-            }
+    private void switchCamera() {
+        if (mFrontCameraId != NO_CAMERA) {
+            mIsFrontCamera = !mIsFrontCamera;
+            openCamera();
         }
     }
+
+
+    //
+    // Auto-focus
+    //
+
+    private final Camera.AutoFocusCallback mAutoFocusCallback = new Camera.AutoFocusCallback() {
+        @Override
+        public void onAutoFocus(boolean success, Camera camera) {
+
+        }
+    };
 
 
     //
@@ -212,13 +287,11 @@ public class BasicPictureTakingActivity extends Activity implements SurfaceHolde
     private final Camera.PictureCallback mJpegCallback = new Camera.PictureCallback() {
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
-            if (BuildConfig.SHOW_PICTURE) {
-                showPicture(CameraUtils.bitmapFromRawBytes(
-                        data,
-                        mPictureView.getWidth(),
-                        mPictureView.getHeight()
-                ));
-            }
+            showPicture(CameraUtils.bitmapFromRawBytes(
+                    data,
+                    mPictureView.getWidth(),
+                    mPictureView.getHeight()
+            ));
         }
     };
 
@@ -246,7 +319,7 @@ public class BasicPictureTakingActivity extends Activity implements SurfaceHolde
     private void showPicture(Bitmap bitmap) {
         mPictureView.setImageBitmap(bitmap);
         mPictureView.setVisibility(View.VISIBLE);
-        mPreviewSurface.setVisibility(View.INVISIBLE);
+        mPreview.setVisibility(View.INVISIBLE);
         mCaptureButton.setVisibility(View.GONE);
         mHandler.postDelayed(mHidePictureRunnable, mHidePictureDelay);
     }
@@ -256,7 +329,7 @@ public class BasicPictureTakingActivity extends Activity implements SurfaceHolde
      */
     private void hidePictureTaken() {
         mPictureView.setVisibility(View.INVISIBLE);
-        mPreviewSurface.setVisibility(View.VISIBLE);
+        mPreview.setVisibility(View.VISIBLE);
         mCaptureButton.setVisibility(View.VISIBLE);
     }
 
@@ -273,7 +346,7 @@ public class BasicPictureTakingActivity extends Activity implements SurfaceHolde
     private void showError(int errorResourceId) {
         mErrorTextView.setText(errorResourceId);
         mErrorTextView.setVisibility(View.VISIBLE);
-        mPreviewSurface.setVisibility(View.GONE);
+        mPreview.setVisibility(View.GONE);
     }
 
     /**
@@ -281,34 +354,7 @@ public class BasicPictureTakingActivity extends Activity implements SurfaceHolde
      */
     private void hideError() {
         mErrorTextView.setVisibility(View.GONE);
-        mPreviewSurface.setVisibility(View.VISIBLE);
-    }
-
-
-    //
-    // SurfaceHolder.Callback implementation
-    //
-
-    @Override
-    public void surfaceCreated(SurfaceHolder holder) {
-        canStartPreview = true;
-
-        // The surface was created so try to start the camera preview displaying on the surface.
-        startPreview();
-    }
-
-    @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-    }
-
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-        // If the surface is destroyed, stop the camera preview.
-        if (mCamera != null) {
-            mCamera.stopPreview();
-        }
-
-        canStartPreview = false;
+        mPreview.setVisibility(View.VISIBLE);
     }
 
 
@@ -318,6 +364,26 @@ public class BasicPictureTakingActivity extends Activity implements SurfaceHolde
 
     @Override
     public void onClick(View v) {
-        takePicture();
+        if (v == mSwitchButton) {
+            switchCamera();
+        }
+    }
+
+
+    //
+    // View.OnTouchListener implementation
+    //
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        switch (event.getAction() & MotionEvent.ACTION_MASK) {
+            case MotionEvent.ACTION_DOWN:
+                mCamera.autoFocus(mAutoFocusCallback);
+                return true;
+            case MotionEvent.ACTION_UP:
+                takePicture();
+                return true;
+        }
+        return false;
     }
 }

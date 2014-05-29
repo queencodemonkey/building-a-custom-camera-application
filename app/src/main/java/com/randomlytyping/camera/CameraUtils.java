@@ -18,14 +18,25 @@ package com.randomlytyping.camera;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.graphics.Point;
+import android.graphics.Rect;
 
 /**
- * The PictureUtils class contains several static utility methods for working with the hardware
+ * The CameraUtils class contains several static utility methods for working with the hardware
  * {@link android.hardware.Camera} and its data.
  * <p/>
- * Created by Huyen Tue Dao on 4/27/14.
+ * Created by Huyen Tue Dao on 04/27/14.
+ *
+ * @author Huyen Tue Dao
  */
-public class PictureUtils {
+public class CameraUtils {
+    /**
+     * Class tag for logging.
+     */
+    @SuppressWarnings("unused")
+    private static final String TAG = "CameraUtils";
+
     /**
      * Creates a {@link android.graphics.Bitmap} from raw image byte data. This will usually come
      * from a {@link android.hardware.Camera.PictureCallback} returning byte data from the {@link
@@ -66,6 +77,37 @@ public class PictureUtils {
         return BitmapFactory.decodeByteArray(data, 0, data.length, options);
     }
 
+    public static void cameraCoordinatesFromViewCoordinates(float[] coordinates, Rect coordinatesRange,
+                                                            int displayOrientation, boolean frontFacing) {
+        final Matrix matrix = new Matrix();
+        matrix.setTranslate(-coordinatesRange.left, -coordinatesRange.top);
+        matrix.postScale(frontFacing ? -1 : 1, 1);
+        matrix.postScale(2000f / coordinatesRange.width(), 2000f / coordinatesRange.height());
+        matrix.postTranslate(-1000f, -1000f);
+        matrix.postRotate(-displayOrientation);
+        matrix.mapPoints(coordinates);
+    }
+
+    public static void viewCoordinatesFromCameraCoordinates(int displayOrientation, boolean frontFacing,
+                                                            Point coordinates, Rect viewCoordinatesRange) {
+        float[] coordinateArray = {coordinates.x, coordinates.y};
+        viewCoordinatesFromCameraCoordinates(displayOrientation, frontFacing, coordinateArray, viewCoordinatesRange);
+        coordinates.x = Math.round(coordinateArray[0]);
+        coordinates.y = Math.round(coordinateArray[1]);
+    }
+
+    public static void viewCoordinatesFromCameraCoordinates(int displayOrientation, boolean frontFacing,
+                                                            float[] coordinates, Rect viewCoordinatesRange) {
+        final Matrix matrix = new Matrix();
+        matrix.setScale(frontFacing ? -1 : 1, 1);
+        matrix.postRotate(displayOrientation);
+        final int width = viewCoordinatesRange.width();
+        final int height = viewCoordinatesRange.height();
+        matrix.postScale(width / 2000f, height / 2000f);
+        matrix.postTranslate(width * 0.5f, height * 0.5f);
+        matrix.mapPoints(coordinates);
+    }
+
 
     //
     // Constructor
@@ -74,6 +116,6 @@ public class PictureUtils {
     /**
      * Private constructor for type safety.
      */
-    private PictureUtils() {
+    private CameraUtils() {
     }
 }

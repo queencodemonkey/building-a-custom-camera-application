@@ -2,7 +2,7 @@
 <!--
   Copyright 2014 Randomly Typing LLC
 
-  Licensed under the Apache License, Version 2.0 (the "License");
+  Licensed under the Apache License, VersiCTIVon 2.0 (the "License");
   you may not use this file except in compliance with the License.
   You may obtain a copy of the License at
 
@@ -18,7 +18,7 @@
              xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
              android:layout_height="match_parent"
-             tools:context=".BasicPictureTakingActivity">
+             tools:context=".BasicCameraInfoActivity">
 
     <!-- Preview surface -->
     <SurfaceView
@@ -43,6 +43,15 @@
         android:layout_gravity="center_horizontal|bottom"
         android:src="@drawable/ic_camera"
         android:contentDescription="@string/accessibility_take_picture_button" />
+
+    <!-- Switch front/back camera button -->
+    <ImageButton
+        android:id="@+id/switch_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right|bottom"
+        android:src="@drawable/ic_camera_switch"
+        android:contentDescription="@string/accessibility_switch_to_front_camera" />
 
     <!-- Error message if camera cannot open. -->
     <TextView

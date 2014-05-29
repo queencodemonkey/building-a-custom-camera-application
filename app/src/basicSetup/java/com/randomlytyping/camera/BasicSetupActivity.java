@@ -16,7 +16,6 @@
 
 package com.randomlytyping.camera;
 
-import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.os.Build;
@@ -29,9 +28,11 @@ import android.widget.TextView;
 import java.io.IOException;
 
 /**
- * The BasicSetupActivity class is just a simple example of how to start using a device camera
- * with {@link android.hardware.Camera} instance and start a camera preview with a
- * {@link android.view.SurfaceView} and a {@link android.view.SurfaceHolder}.
+ * The BasicSetupActivity class is just a simple example of how to start using a device camera with
+ * {@link android.hardware.Camera} instance and start a simple camera preview with a {@link
+ * android.view.SurfaceView} and a {@link android.view.SurfaceHolder}.
+ * <p/>
+ * Created by Huyen Tue Dao on 04/27/14.
  */
 public class BasicSetupActivity extends Activity implements SurfaceHolder.Callback {
     // Views
@@ -41,6 +42,9 @@ public class BasicSetupActivity extends Activity implements SurfaceHolder.Callba
     // Camera fields
     private SurfaceHolder mSurfaceHolder;
     private Camera mCamera;
+
+    // Flags
+    private boolean canStartPreview;
 
 
     //
@@ -57,7 +61,38 @@ public class BasicSetupActivity extends Activity implements SurfaceHolder.Callba
         mPreviewSurface = (SurfaceView) findViewById(R.id.preview_surface);
         mErrorTextView = (TextView) findViewById(R.id.error_text);
 
-        setRequestedOrientation(BuildConfig.ORIENTATION);
+        /*
+            If the device actually has a camera, set up the surface holder.
+            Otherwise, display an error message.
+        */
+        if (hasCamera()) {
+            /*
+                If the activity contains a valid SurfaceView for the preview, then set it up.
+                Otherwise, display an error message.
+             */
+            if (mPreviewSurface != null) {
+                /*  Need to grab a reference to the SurfaceHolder so that we can respond to changes
+                in the surface. */
+                mSurfaceHolder = mPreviewSurface.getHolder();
+
+                /*  Add a callback to the SurfaceHolder so that we can start the preview after the
+                surface is created. */
+                mSurfaceHolder.addCallback(this);
+
+                /*  In order to support Gingerbread and below, need to call SurfaceHolder#setType.
+                If Gingerbread support is not needed, then do not call #setType as it is deprecated
+                and higher API levels take care of this setting automatically. */
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+                    mSurfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+                }
+
+                hideError();
+            } else {
+                showError(R.string.error_preview_surface_view_does_not_exist);
+            }
+        } else {
+            showError(R.string.error_no_camera);
+        }
     }
 
     @Override
@@ -65,27 +100,11 @@ public class BasicSetupActivity extends Activity implements SurfaceHolder.Callba
         super.onResume();
 
         // If there is a hardware camera then open it and start setting up the preview surface.
-        if (hasCamera()) {
+        if (mPreviewSurface != null && hasCamera()) {
             openCamera();
-            mSurfaceHolder = mPreviewSurface != null ? mPreviewSurface.getHolder() : null;
-            if ( mSurfaceHolder != null )
-            {
-                /*  Add a callback to the SurfaceHolder so that we can start the preview after the
-                surface is created. */
-                mSurfaceHolder.addCallback( this );
-
-                /*  In order to support Gingerbread and below, need to call SurfaceHolder#setType.
-                If Gingerbread support is not needed, then do not call #setType as it is deprecated
-                and higher API levels take care of this setting automatically. */
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB ) {
-                    mSurfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-                }
-
-                hideError();
-            }
-            else
-            {
-                showError(R.string.error_preview_surface_view_does_not_exist);
+            // If the surface has already been created, then start the preview.
+            if (canStartPreview) {
+                startPreview();
             }
         }
     }
@@ -93,12 +112,6 @@ public class BasicSetupActivity extends Activity implements SurfaceHolder.Callba
     @Override
     protected void onPause() {
         super.onPause();
-
-        // Tear down the surface holder.
-        if (mSurfaceHolder != null)
-        {
-            mSurfaceHolder.removeCallback(this);
-        }
 
         // Close the camera while we are not using so that other applications can use it.
         closeCamera();
@@ -124,7 +137,7 @@ public class BasicSetupActivity extends Activity implements SurfaceHolder.Callba
      * Open the first back-facing camera and grab a {@link android.hardware.Camera} instance.
      */
     private void openCamera() {
-        if ( mCamera != null ) {
+        if (mCamera == null) {
             mCamera = Camera.open();
         }
     }
@@ -144,12 +157,13 @@ public class BasicSetupActivity extends Activity implements SurfaceHolder.Callba
      * Starts the camera preview using our already-created surface.
      */
     private void startPreview() {
-        try {
-            mCamera.setPreviewDisplay(mSurfaceHolder);
-            mCamera.startPreview();
-        }
-        catch (IOException e) {
-            showError(R.string.error_preview_not_started);
+        if (mCamera != null) {
+            try {
+                mCamera.setPreviewDisplay(mSurfaceHolder);
+                mCamera.startPreview();
+            } catch (IOException e) {
+                showError(R.string.error_preview_not_started);
+            }
         }
     }
 
@@ -163,8 +177,7 @@ public class BasicSetupActivity extends Activity implements SurfaceHolder.Callba
      *
      * @param errorResourceId A resource ID for the error string resource.
      */
-    private void showError(int errorResourceId)
-    {
+    private void showError(int errorResourceId) {
         mErrorTextView.setText(errorResourceId);
         mErrorTextView.setVisibility(View.VISIBLE);
         mPreviewSurface.setVisibility(View.GONE);
@@ -173,8 +186,7 @@ public class BasicSetupActivity extends Activity implements SurfaceHolder.Callba
     /**
      * Hides the error message text and show the camera preview.
      */
-    private void hideError()
-    {
+    private void hideError() {
         mErrorTextView.setVisibility(View.GONE);
         mPreviewSurface.setVisibility(View.VISIBLE);
     }
@@ -186,21 +198,23 @@ public class BasicSetupActivity extends Activity implements SurfaceHolder.Callba
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
+        canStartPreview = true;
+
         // The surface was created so try to start the camera preview displaying on the surface.
         startPreview();
     }
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        if (holder.getSurface() == null)
-        {
-            showError(R.string.error_surface_does_not_exist);
-        }
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-        // If the surface is destroyed, close the camera.
-        closeCamera();
+        // If the surface is destroyed, stop the camera preview.
+        if (mCamera != null) {
+            mCamera.stopPreview();
+        }
+
+        canStartPreview = false;
     }
 }

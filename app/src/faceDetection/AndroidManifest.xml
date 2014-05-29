@@ -20,9 +20,9 @@
     <!-- Application declaration -->
     <application>
         <activity
-            android:name=".BasicSetupActivity"
-            android:label="@string/title_activity_basic_setup"
-            android:screenOrientation="landscape">
+            android:name=".FaceDetectionActivity"
+            android:label="@string/title_activity_face_detection"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

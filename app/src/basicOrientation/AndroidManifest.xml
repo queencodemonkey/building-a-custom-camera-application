@@ -20,8 +20,9 @@
     <!-- Application declaration -->
     <application>
         <activity
-            android:name=".BasicSetupActivity"
-            android:label="@string/title_activity_basic_setup"
+            android:name=".BasicOrientationActivity"
+            android:label="@string/title_activity_basic_orientation"
+            android:configChanges="keyboardHidden|orientation|screenSize"
             android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
