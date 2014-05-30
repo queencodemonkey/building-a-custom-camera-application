@@ -8,26 +8,26 @@ Project structure
 
 So for demonstration purposes and for playing-around-with-gradle purposes, I created a different product flavor for each demo application. There are some flavors with minute changes and some which I did not actually use or both. For those demos that I actually reviewed today, you can install them via gradle as follow:
 1. Basic setup and picture taking: demonstration of camera setup, calling the `Camera#takePicture` method and displaying image data in an `ImageView`.
-..- Flavor: basicPictureTaking
-..- Main activity: `BasicPictureTakingActivity.java`
-..- Build command: `./gradlew iBPTD`
+  - Flavor: basicPictureTaking
+  - Main activity: `BasicPictureTakingActivity.java`
+  - Build command: `./gradlew iBPTD`
 2. Using `CameraInfo` to switch cameras: demonstration of how to query `CameraInfo` for the various cameras on a device and using info to find and switch between device cameras.
-..- Flavor: basicCameraInfo
-..- Main activity: `BasicCameraInfoActivity.java`
-..- Build command: `./gradlew iBCID`
+  - Flavor: basicCameraInfo
+  - Main activity: `BasicCameraInfoActivity.java`
+  - Build command: `./gradlew iBCID`
 3. Dealing with activity orientation vs. camera/preview orientation.
-..- Flavor: basicOrientation
-..- Main activity: `BasicOrientationActivity.java`
-..- Build command: `./gradlew iBOD`
+  - Flavor: basicOrientation
+  - Main activity: `BasicOrientationActivity.java`
+  - Build command: `./gradlew iBOD`
 4. Using `Camera.Parameters` to access device settings.
-..- Flavor: basicParameters
-..- Main activity: `BasicParametersActivity.java`
-..- Build command: `./gradlew iBPD`
+  - Flavor: basicParameters
+  - Main activity: `BasicParametersActivity.java`
+  - Build command: `./gradlew iBPD`
 5. Implementing touch-to-focus with focus areas and `Camera.Area`.
-..- Flavor: area
-..- Main activity: `CameraAreaActivity.java`
-..- Build command: `./gradlew iAD`
+  - Flavor: area
+  - Main activity: `CameraAreaActivity.java`
+  - Build command: `./gradlew iAD`
 6. Using face detection.
-..- Flavor: faceDetection
-..- Main activity: `FaceDetectionActivity.java`
-..- Build command: `./gradlew iFDD`
+  - Flavor: faceDetection
+  - Main activity: `FaceDetectionActivity.java`
+  - Build command: `./gradlew iFDD`
