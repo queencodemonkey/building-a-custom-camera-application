@@ -23,7 +23,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.Surface;
@@ -33,7 +32,6 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -49,7 +47,7 @@ public class Preview extends ViewGroup implements SurfaceHolder.Callback, Camera
     /**
      * Delay from last face detected update before it is determined there is "no face detected".
      */
-    private static final long NO_FACE_DETECTED_DELAY = 100;
+    private static final long NO_FACE_DETECTED_DELAY = 80;
 
 
     //
@@ -427,7 +425,7 @@ public class Preview extends ViewGroup implements SurfaceHolder.Callback, Camera
         }
 
         float[] coordinates = {x, y};
-        CameraUtils.cameraCoordinatesFromViewCoordinates(
+        CameraUtils.getSensorCoordinates(
                 coordinates, mOverlayBounds,
                 mDisplayOrientation, mCameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT);
 
@@ -571,15 +569,15 @@ public class Preview extends ViewGroup implements SurfaceHolder.Callback, Camera
     @Override
     public void onFaceDetection(Camera.Face[] faces, Camera camera) {
         if (faces.length > 0) {
+
             // Remove callbacks that check whether no more faces are being detected.
             mFaceDetectionHandler.removeCallbacks(mFaceDetectionRunnable);
 
             final boolean frontFacing = mCameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT;
             for (Camera.Face face : faces) {
                 float[] faceCoordinates = {face.rect.left, face.rect.top, face.rect.right, face.rect.bottom};
-                CameraUtils.viewCoordinatesFromCameraCoordinates(
-                        mDisplayOrientation, frontFacing,
-                        faceCoordinates, mOverlayBounds);
+                CameraUtils.getViewCoordinates(faceCoordinates, mDisplayOrientation, frontFacing,
+                        mOverlayBounds);
                 final float x1, x2, y1, y2;
                 if (faceCoordinates[0] < faceCoordinates[2]) {
                     x1 = faceCoordinates[0];
@@ -600,25 +598,15 @@ public class Preview extends ViewGroup implements SurfaceHolder.Callback, Camera
                 face.rect.right = Math.round(x2);
                 face.rect.bottom = Math.round(y2);
 
+                /*  If the left eye coordinate exists, then all facial features are supported and
+                they all exist. */
                 if (face.leftEye != null) {
-                    CameraUtils.viewCoordinatesFromCameraCoordinates(
-                            mDisplayOrientation, frontFacing,
-                            face.leftEye, mOverlayBounds
-                    );
-                }
-
-                if (face.rightEye != null) {
-                    CameraUtils.viewCoordinatesFromCameraCoordinates(
-                            mDisplayOrientation, frontFacing,
-                            face.leftEye, mOverlayBounds
-                    );
-                }
-
-                if (face.mouth != null) {
-                    CameraUtils.viewCoordinatesFromCameraCoordinates(
-                            mDisplayOrientation, frontFacing,
-                            face.leftEye, mOverlayBounds
-                    );
+                    CameraUtils.getViewCoordinates(face.leftEye, mDisplayOrientation, frontFacing,
+                            mOverlayBounds);
+                    CameraUtils.getViewCoordinates(face.rightEye, mDisplayOrientation, frontFacing,
+                            mOverlayBounds);
+                    CameraUtils.getViewCoordinates(face.mouth, mDisplayOrientation, frontFacing,
+                            mOverlayBounds);
                 }
             }
             mOverlay.setFaces(faces);

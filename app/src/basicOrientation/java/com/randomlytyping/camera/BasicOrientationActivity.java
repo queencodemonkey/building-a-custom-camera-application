@@ -23,6 +23,8 @@ import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.Display;
+import android.view.Surface;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -217,14 +219,13 @@ public class BasicOrientationActivity extends Activity implements View.OnClickLi
     }
 
     /**
-     * Returns a {@link android.hardware.Camera.CameraInfo} instance containing
-     * information on the currently open camera.
+     * Returns a {@link android.hardware.Camera.CameraInfo} instance containing information on the
+     * currently open camera.
      *
-     * @return A {@link android.hardware.Camera.CameraInfo} instance containing
-     * information on the currently open camera or `null` if no camera is open.
+     * @return A {@link android.hardware.Camera.CameraInfo} instance containing information on the
+     * currently open camera or `null` if no camera is open.
      */
-    private Camera.CameraInfo getCameraInfo()
-    {
+    private Camera.CameraInfo getCameraInfo() {
         final Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
         Camera.getCameraInfo(mIsFrontCamera ? mFrontCameraId : mBackCameraId, cameraInfo);
         return cameraInfo;
@@ -237,8 +238,10 @@ public class BasicOrientationActivity extends Activity implements View.OnClickLi
         if (mCamera != null) {
             mCamera.release();
         }
+
         mCamera = Camera.open(mIsFrontCamera ? mFrontCameraId : mBackCameraId);
-        mPreview.setCamera(mCamera, getCameraInfo());
+        final Camera.CameraInfo cameraInfo = getCameraInfo();
+        mPreview.setCamera(mCamera, cameraInfo);
         mPreview.start();
     }
 

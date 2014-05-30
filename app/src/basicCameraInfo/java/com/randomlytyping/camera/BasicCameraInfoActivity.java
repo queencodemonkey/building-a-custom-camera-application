@@ -392,7 +392,9 @@ public class BasicCameraInfoActivity extends Activity implements SurfaceHolder.C
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
         // If the surface is destroyed, stop the camera preview.
-        mCamera.stopPreview();
+        if (mCamera != null) {
+            mCamera.stopPreview();
+        }
 
         canStartPreview = false;
     }

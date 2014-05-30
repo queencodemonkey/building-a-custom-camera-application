@@ -16,6 +16,7 @@
 
 package com.randomlytyping.camera;
 
+import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.os.Build;

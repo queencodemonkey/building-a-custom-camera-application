@@ -21,9 +21,7 @@
     <application>
         <activity
             android:name=".BasicOrientationActivity"
-            android:label="@string/title_activity_basic_orientation"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            android:screenOrientation="landscape">
+            android:label="@string/title_activity_basic_orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

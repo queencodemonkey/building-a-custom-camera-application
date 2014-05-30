@@ -77,27 +77,29 @@ public class CameraUtils {
         return BitmapFactory.decodeByteArray(data, 0, data.length, options);
     }
 
-    public static void cameraCoordinatesFromViewCoordinates(float[] coordinates, Rect coordinatesRange,
-                                                            int displayOrientation, boolean frontFacing) {
+
+    public static void getSensorCoordinates(float[] coordinates, Rect viewCoordinatesRange,
+                                            int displayOrientation, boolean frontFacing) {
         final Matrix matrix = new Matrix();
-        matrix.setTranslate(-coordinatesRange.left, -coordinatesRange.top);
+        matrix.setTranslate(-viewCoordinatesRange.left, -viewCoordinatesRange.top);
         matrix.postScale(frontFacing ? -1 : 1, 1);
-        matrix.postScale(2000f / coordinatesRange.width(), 2000f / coordinatesRange.height());
+        matrix.postScale(2000f / viewCoordinatesRange.width(), 2000f / viewCoordinatesRange.height());
         matrix.postTranslate(-1000f, -1000f);
         matrix.postRotate(-displayOrientation);
         matrix.mapPoints(coordinates);
     }
 
-    public static void viewCoordinatesFromCameraCoordinates(int displayOrientation, boolean frontFacing,
-                                                            Point coordinates, Rect viewCoordinatesRange) {
+    public static void getViewCoordinates(Point coordinates, int displayOrientation,
+                                          boolean frontFacing, Rect viewCoordinatesRange) {
         float[] coordinateArray = {coordinates.x, coordinates.y};
-        viewCoordinatesFromCameraCoordinates(displayOrientation, frontFacing, coordinateArray, viewCoordinatesRange);
+        getViewCoordinates(coordinateArray, displayOrientation, frontFacing,
+                viewCoordinatesRange);
         coordinates.x = Math.round(coordinateArray[0]);
         coordinates.y = Math.round(coordinateArray[1]);
     }
 
-    public static void viewCoordinatesFromCameraCoordinates(int displayOrientation, boolean frontFacing,
-                                                            float[] coordinates, Rect viewCoordinatesRange) {
+    public static void getViewCoordinates(float[] coordinates, int displayOrientation,
+                                          boolean frontFacing, Rect viewCoordinatesRange) {
         final Matrix matrix = new Matrix();
         matrix.setScale(frontFacing ? -1 : 1, 1);
         matrix.postRotate(displayOrientation);

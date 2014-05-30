@@ -20,8 +20,11 @@ import android.content.Context;
 import android.hardware.Camera;
 import android.os.Build;
 import android.util.AttributeSet;
+import android.view.Display;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.WindowManager;
 
 import java.io.IOException;
 import java.util.List;
@@ -88,6 +91,8 @@ public class PreviewSurface extends SurfaceView implements SurfaceHolder.Callbac
     // Listeners/Callbacks
     private PreviewStateChangeListener mPreviewStateChangeListener;
 
+    // References
+    private Display mDefaultDisplay;
 
     //
     // Constructors/Initialization
@@ -100,7 +105,7 @@ public class PreviewSurface extends SurfaceView implements SurfaceHolder.Callbac
      */
     public PreviewSurface(Context context) {
         super(context);
-        init();
+        init(context);
     }
 
     /**
@@ -111,13 +116,13 @@ public class PreviewSurface extends SurfaceView implements SurfaceHolder.Callbac
      */
     public PreviewSurface(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init();
+        init(context);
     }
 
     /**
      * Initialization helper for constructors.
      */
-    private void init() {
+    private void init(Context context) {
         final SurfaceHolder holder = getHolder();
 
         /*
@@ -138,6 +143,10 @@ public class PreviewSurface extends SurfaceView implements SurfaceHolder.Callbac
 
         // Initializes the camera preview state.
         mState = PREVIEW_STATE_NO_SURFACE;
+
+        final WindowManager windowManager =
+                (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        mDefaultDisplay = windowManager.getDefaultDisplay();
     }
 
 
@@ -170,6 +179,37 @@ public class PreviewSurface extends SurfaceView implements SurfaceHolder.Callbac
         mCamera = camera;
         mCameraInfo = cameraInfo;
     }
+
+    public void updatePreviewOrientation() {
+        if (mDefaultDisplay == null) {
+            return;
+        }
+        int degrees = 0;
+        switch (mDefaultDisplay.getRotation()) {
+            case Surface.ROTATION_0:
+                degrees = 0;
+                break;
+            case Surface.ROTATION_90:
+                degrees = 90;
+                break;
+            case Surface.ROTATION_180:
+                degrees = 180;
+                break;
+            case Surface.ROTATION_270:
+                degrees = 270;
+                break;
+        }
+
+        int result;
+        if (mCameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+            result = (mCameraInfo.orientation + degrees) % 360;
+            result = (360 - result) % 360;
+        } else {
+            result = (mCameraInfo.orientation - degrees + 360) % 360;
+        }
+        mCamera.setDisplayOrientation(result);
+    }
+
 
     public void setPreviewStateChangeListener(PreviewStateChangeListener previewStateChangeListener) {
         mPreviewStateChangeListener = previewStateChangeListener;
@@ -302,6 +342,7 @@ public class PreviewSurface extends SurfaceView implements SurfaceHolder.Callbac
             mState = PREVIEW_STATE_STOPPED;
             mCamera.stopPreview();
 
+            updatePreviewOrientation();
             updatePreviewSize(getMeasuredWidth(), getMeasuredHeight());
 
             mCamera.startPreview();

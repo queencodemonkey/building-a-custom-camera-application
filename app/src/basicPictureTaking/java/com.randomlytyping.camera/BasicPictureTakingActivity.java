@@ -16,6 +16,7 @@
 
 package com.randomlytyping.camera;
 
+import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.hardware.Camera;
@@ -23,6 +24,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -31,6 +33,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.io.IOException;
+import java.lang.Override;
 
 /**
  * The BasicPictureTakingActivity class demonstrates simple picture taking with the {@link
@@ -41,6 +44,12 @@ import java.io.IOException;
  */
 public class BasicPictureTakingActivity extends Activity implements SurfaceHolder.Callback,
         View.OnClickListener {
+
+    /**
+     * Class tag for logging.
+     */
+    @SuppressWarnings("unused")
+    private static final String TAG = "BasicPictureTakingActivity";
 
     // Views
     private SurfaceView mPreviewSurface;
@@ -212,6 +221,7 @@ public class BasicPictureTakingActivity extends Activity implements SurfaceHolde
     private final Camera.PictureCallback mJpegCallback = new Camera.PictureCallback() {
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
+            Log.d(TAG, String.format("JPEG Callback"));
             if (BuildConfig.SHOW_PICTURE) {
                 showPicture(CameraUtils.bitmapFromRawBytes(
                         data,
@@ -227,8 +237,13 @@ public class BasicPictureTakingActivity extends Activity implements SurfaceHolde
      */
     private void takePicture() {
         if (mCamera != null) {
-            // Take picture and capture raw image data.
-            mCamera.takePicture(null, null, mJpegCallback);
+            // Take picture and capture JPEG image data.
+            mCamera.takePicture(null, new Camera.PictureCallback() {
+                @Override
+                public void onPictureTaken(byte[] data, Camera camera) {
+                    Log.d(TAG, String.format("onPictureTaken:RAW DATA?"));
+                }
+            }, mJpegCallback);
         }
     }
 
