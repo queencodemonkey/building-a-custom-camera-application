@@ -7,6 +7,7 @@ Project structure
 -----------------
 
 So for demonstration purposes and for playing-around-with-gradle purposes, I created a different product flavor for each demo application. There are some flavors with minute changes and some which I did not actually use or both. For those demos that I actually reviewed today, you can install them via gradle as follow:
+
 1. Basic setup and picture taking: demonstration of camera setup, calling the `Camera#takePicture` method and displaying image data in an `ImageView`.
   - Flavor: basicPictureTaking
   - Main activity: `BasicPictureTakingActivity.java`
