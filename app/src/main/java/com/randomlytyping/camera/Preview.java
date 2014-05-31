@@ -62,13 +62,13 @@ public class Preview extends ViewGroup implements SurfaceHolder.Callback, Camera
     /**
      * Indicates that there surface has not yet been created or has been destroyed and so the camera
      * preview cannot be started or stopped yet. There may be a {@link android.hardware.Camera}
-     * associated with the PreviewSurface at this point.
+     * associated with the surface at this point.
      */
     public static final int PREVIEW_STATE_NO_SURFACE = 0;
 
     /**
      * Indicates that the surface has been created but that no camera has been attached to the
-     * PreviewSurface yet. So the PreviewSurface is ready to display camera preview.
+     * surface yet. So the surface is ready to display camera preview.
      */
     public static final int PREVIEW_STATE_READY = 1;
 
@@ -299,8 +299,8 @@ public class Preview extends ViewGroup implements SurfaceHolder.Callback, Camera
     public void start() {
         if (mCamera != null && (mState >= PREVIEW_STATE_READY)) {
             /*
-                Try setting up the PreviewSurface to be the passed Camera's preview display. If for
-            some reason it errors, then change the state of the PreviewSurface to indicate this.
+                Try setting up the surface to be the passed Camera's preview display. If for
+            some reason it errors, then change the state of the surface to indicate this.
              */
             try {
                 mCamera.setPreviewDisplay(mSurfaceView.getHolder());
