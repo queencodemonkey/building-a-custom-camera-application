@@ -32,3 +32,8 @@ So for demonstration purposes and for playing-around-with-gradle purposes, I cre
   - Flavor: faceDetection
   - Main activity: `FaceDetectionActivity.java`
   - Build command: `./gradlew iFDD`
+
+Other classes
+-------------
+- `PreviewSurface`: A `SurfaceView` class used in `BasicParametersActivity` and `BasicOrientationActivity` to consolidate `SurfaceView`-related logic.
+- `Preview` and `PreviewOverlay`: Views used in `CameraAreaActivity` and `FaceDetectionActivity` in lieu of a plain `SurfaceView` or `PreviewSurface`. Includes logic for capturing touch events and drawing on top of a camera preview.
