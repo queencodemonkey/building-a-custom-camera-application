@@ -258,10 +258,10 @@ public class CameraAreaActivity extends Activity implements View.OnClickListener
         mPreview.start();
         final Camera.Parameters parameters = mCamera.getParameters();
         if (parameters.getMaxNumFocusAreas() > 0) {
-            mPreview.activateFocusArea();
+            mPreview.startFocusAreaSelection();
             mPreview.setListener(this);
         } else {
-            mPreview.deactivateFocusArea();
+            mPreview.stopFocusAreaSelection();
             mPreview.setListener(null);
         }
     }
