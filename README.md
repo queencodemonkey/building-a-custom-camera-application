@@ -1,4 +1,4 @@
-AnDevCon 2014: "Building a Custom Camera Application"
+AnDevCon 2014: "Building a Custom Camera Application" - A great application
 =============================
 
 This repository contains the Android project that I used for my AnDevCon Boston 2014 Presentation "Building a Custom Camera Application." I actually plan to clean-up the code and package some of the code in a library for re-use so please drop me a note if you are interested in that or any other features which I did not get a chance to discuss.
